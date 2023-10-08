@@ -3,16 +3,17 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { CanvasBoxComponent } from './components/canvas-box/canvas-box.component';
+
+import { GameModule } from './modules/game/game.module';
 
 @NgModule({
   declarations: [
-    AppComponent,
-    CanvasBoxComponent
+    AppComponent
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    GameModule
   ],
   providers: [],
   bootstrap: [AppComponent]

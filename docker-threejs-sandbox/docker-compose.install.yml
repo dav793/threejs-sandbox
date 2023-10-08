@@ -11,9 +11,7 @@ services:
     network_mode: "bridge"
     volumes:
       - project-volume:/projects/threejs-sandbox
-    ports:
-      - "4200:4200"
-    command: [ "./three-client/_run.sh" ]
+    command: [ "./three-client/_install.sh" ]
     
 volumes:
   project-volume:

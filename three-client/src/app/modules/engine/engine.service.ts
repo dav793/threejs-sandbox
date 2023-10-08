@@ -1,15 +1,9 @@
-import { Component, NgZone, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
+import { Injectable, ElementRef } from '@angular/core';
 
 import * as THREE from 'three';
 
-@Component({
-  selector: 'app-canvas-box',
-  templateUrl: './canvas-box.component.html',
-  styleUrls: ['./canvas-box.component.scss']
-})
-export class CanvasBoxComponent implements AfterViewInit, OnDestroy {
-
-  @ViewChild('canvas', { static: true }) private canvas: ElementRef<HTMLCanvasElement>;
+@Injectable()
+export class EngineService {
 
   private renderer: THREE.WebGLRenderer;
   private camera: THREE.PerspectiveCamera;
@@ -20,40 +14,35 @@ export class CanvasBoxComponent implements AfterViewInit, OnDestroy {
 
   private frameId: number | null = null;
 
-  constructor(private ngZone: NgZone) { }
+  constructor() { }
 
-  public ngOnDestroy(): void {
+  destroyCanvas(canvas: ElementRef<HTMLCanvasElement>): void {
     if (this.frameId != null) {
       cancelAnimationFrame(this.frameId);
     }
     if (this.renderer != null) {
       this.renderer.dispose();
       this.renderer = undefined;
-      this.canvas = undefined;
+      canvas = undefined;
     }
   }
 
-  ngAfterViewInit(): void {
-    this.createThreeJsCanvas();
-    this.animate();
-  }
-
-  createThreeJsCanvas(): void {
+  createCanvas(canvas: ElementRef<HTMLCanvasElement>, width: number, height: number): void {
 
     // setup renderer
     this.renderer = new THREE.WebGLRenderer({
-      canvas: this.canvas.nativeElement,
-      alpha: true,    // transparent background
-      antialias: true // smooth edges
+      canvas: canvas.nativeElement,
+      alpha: true,                    // transparent background
+      antialias: true                 // smooth edges
     });
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setSize(width, height);
 
     // create the scene
     this.scene = new THREE.Scene();
 
     // create the camera
     this.camera = new THREE.PerspectiveCamera(
-      75, window.innerWidth / window.innerHeight, 0.1, 1000
+      75, width / height, 0.1, 1000
     );
     this.camera.position.z = 5;
     this.scene.add(this.camera);
@@ -73,24 +62,6 @@ export class CanvasBoxComponent implements AfterViewInit, OnDestroy {
 
   }
 
-  public animate(): void {
-    // We have to run this outside angular zones,
-    // because it could trigger heavy changeDetection cycles.
-    this.ngZone.runOutsideAngular(() => {
-      if (document.readyState !== 'loading') {
-        this.render();
-      } else {
-        window.addEventListener('DOMContentLoaded', () => {
-          this.render();
-        });
-      }
-
-      window.addEventListener('resize', () => {
-        this.resize();
-      });
-    });
-  }
-
   public render(): void {
     this.frameId = requestAnimationFrame(() => {
       this.render();
@@ -101,10 +72,7 @@ export class CanvasBoxComponent implements AfterViewInit, OnDestroy {
     this.renderer.render(this.scene, this.camera);
   }
 
-  public resize(): void {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-
+  public resize(width: number, height: number): void {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
 

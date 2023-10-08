@@ -1,16 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CanvasBoxComponent } from './canvas-box.component';
+import { GameViewComponent } from './game-view.component';
 
-describe('CanvasBoxComponent', () => {
-  let component: CanvasBoxComponent;
-  let fixture: ComponentFixture<CanvasBoxComponent>;
+describe('GameViewComponent', () => {
+  let component: GameViewComponent;
+  let fixture: ComponentFixture<GameViewComponent>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [CanvasBoxComponent]
+      declarations: [GameViewComponent]
     });
-    fixture = TestBed.createComponent(CanvasBoxComponent);
+    fixture = TestBed.createComponent(GameViewComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
