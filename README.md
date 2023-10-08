@@ -70,7 +70,7 @@
 
     See [Run](#run).
 
-### Uninstall
+## Uninstall
 
 Mac OS / Linux / Windows:
 ```bash
@@ -78,7 +78,7 @@ docker container rm threejs-sandbox
 docker image rm threejs-sandbox
 ```
 
-### Run
+## Run
 
 Mac OS / Linux / Windows:
 ```bash
