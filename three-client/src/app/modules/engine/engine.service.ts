@@ -1,18 +1,27 @@
 import { Injectable, ElementRef } from '@angular/core';
+import { Subject } from 'rxjs';
 
 import * as THREE from 'three';
+import { EffectComposer } from 'postprocessing';
+// import { RenderPixelatedPass } from 'postprocessing';
+// import { OutputPass } from 'postprocessing';
 
 @Injectable()
 export class EngineService {
 
   private renderer: THREE.WebGLRenderer;
+  private composer: EffectComposer;
   private camera: THREE.PerspectiveCamera;
   private scene: THREE.Scene;
-  private light: THREE.AmbientLight;
+  private ambientLight: THREE.AmbientLight;
+  private sunLight: THREE.DirectionalLight;
 
   private cube: THREE.Mesh;
+  private ground: THREE.Mesh;
 
   private frameId: number | null = null;
+
+  private fps$: Subject<number> = new Subject<number>();
 
   constructor() { }
 
@@ -27,7 +36,7 @@ export class EngineService {
     }
   }
 
-  createCanvas(canvas: ElementRef<HTMLCanvasElement>, width: number, height: number): void {
+  createCanvas(canvas: ElementRef<HTMLCanvasElement>, width: number, height: number, pixelRatio: number): void {
 
     // setup renderer
     this.renderer = new THREE.WebGLRenderer({
@@ -35,7 +44,11 @@ export class EngineService {
       alpha: true,                    // transparent background
       antialias: true                 // smooth edges
     });
+    this.renderer.setPixelRatio(pixelRatio);
     this.renderer.setSize(width, height);
+    this.renderer.shadowMap.enabled = true;
+
+    
 
     // create the scene
     this.scene = new THREE.Scene();
@@ -47,18 +60,44 @@ export class EngineService {
     this.camera.position.z = 5;
     this.scene.add(this.camera);
 
-    // set soft white light
-    this.light = new THREE.AmbientLight(0x404040);
-    this.light.position.z = 10;
-    this.scene.add(this.light);
+    // set soft white ambient light
+    this.ambientLight = new THREE.AmbientLight(0x404040);
+    this.ambientLight.position.z = 10;
+    this.scene.add(this.ambientLight);
+
+    // set sun light
+    this.sunLight = new THREE.DirectionalLight( 0xffffff, 3 );
+    this.sunLight.position.set( - 5, 10, 10 );
+    this.sunLight.castShadow = true;
+    this.sunLight.shadow.camera.top = 2;
+    this.sunLight.shadow.camera.bottom = - 2;
+    this.sunLight.shadow.camera.left = - 2;
+    this.sunLight.shadow.camera.right = 2;
+    this.sunLight.shadow.camera.near = 0.1;
+    this.sunLight.shadow.camera.far = 40;
+    this.scene.add(this.sunLight);
 
     // add geometry
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    this.cube = new THREE.Mesh(geometry, material);
+    this.cube = new THREE.Mesh(
+      new THREE.BoxGeometry(1, 1, 1), 
+      new THREE.MeshPhongMaterial({ color: 0xcbcbcb, depthWrite: true })
+    );
+    // this.cube.receiveShadow = true;
+    this.cube.castShadow = true;
     this.scene.add(this.cube);
 
-    this.camera.position.z = 5;
+    // add ground plane
+    this.ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(100, 100),
+      new THREE.MeshPhongMaterial({ color: 0x32a852, depthWrite: true })
+    );
+    this.ground.receiveShadow = true;
+    this.ground.position.set( 0, -1.5, 0 );
+    const angle = -90;
+    const rads = angle * (Math.PI/180);
+    this.ground.rotateX(rads);
+
+    this.scene.add(this.ground);
 
   }
 

@@ -11,6 +11,8 @@ export class GameViewComponent {
 
   @ViewChild('canvas', { static: true }) private canvas: ElementRef<HTMLCanvasElement>;
 
+  public fps: number;
+
   constructor(
     private engineService: EngineService,
     private ngZone: NgZone
@@ -21,7 +23,7 @@ export class GameViewComponent {
   }
 
   ngAfterViewInit(): void {
-    this.engineService.createCanvas(this.canvas, window.innerWidth, window.innerHeight);
+    this.engineService.createCanvas(this.canvas, window.innerWidth, window.innerHeight, window.devicePixelRatio);
     this.animate();
   }
 
@@ -29,6 +31,7 @@ export class GameViewComponent {
     // We have to run this outside angular zones,
     // because it could trigger heavy changeDetection cycles.
     this.ngZone.runOutsideAngular(() => {
+
       if (document.readyState !== 'loading') {
         this.engineService.render();
       } else {
@@ -40,6 +43,7 @@ export class GameViewComponent {
       window.addEventListener('resize', () => {
         this.engineService.resize(window.innerWidth, window.innerHeight);
       });
+
     });
   }
   
