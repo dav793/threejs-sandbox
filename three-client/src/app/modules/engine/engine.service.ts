@@ -31,10 +31,6 @@ export class EngineService {
 
   constructor() { }
 
-  initMetricsPanel() {
-
-  }
-
   destroyCanvas(canvas: ElementRef<HTMLCanvasElement>): void {
     if (this.frameId != null) {
       cancelAnimationFrame(this.frameId);
@@ -91,11 +87,28 @@ export class EngineService {
     this.scene.add(this.sunLight);
 
     // add geometry
-    this.cube = new THREE.Mesh(
-      new THREE.BoxGeometry(1, 1, 1), 
-      new THREE.MeshPhongMaterial({ color: 0xcbcbcb, depthWrite: true })
-    );
-    // this.cube.receiveShadow = true;
+    // this.cube = new THREE.Mesh(
+    //   new THREE.BoxGeometry(1, 1, 1), 
+    //   new THREE.MeshPhongMaterial({ color: 0xcbcbcb, depthWrite: true })
+    // );
+    // // this.cube.receiveShadow = true;
+    // this.cube.castShadow = true;
+    // this.scene.add(this.cube);
+
+    // add geometry using custom shader
+    const uniforms = {
+      colorB: {type: 'vec3', value: new THREE.Color(0xACB6E5)},
+      colorA: {type: 'vec3', value: new THREE.Color(0x74ebd5)}
+    };
+
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material =  new THREE.ShaderMaterial({
+      uniforms,
+      fragmentShader: this.fragmentShader(),
+      vertexShader: this.vertexShader(),
+    });
+
+    this.cube = new THREE.Mesh(geometry, material);
     this.cube.castShadow = true;
     this.scene.add(this.cube);
 
@@ -147,5 +160,30 @@ export class EngineService {
     this.camera.updateProjectionMatrix();
 
     this.renderer.setSize(width, height);
+  }
+
+  vertexShader() {
+    return `
+      varying vec3 vUv; 
+
+      void main() {
+        vUv = position; 
+
+        vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
+        gl_Position = projectionMatrix * modelViewPosition; 
+      }
+    `;
+  }
+
+  fragmentShader() {
+    return `
+      uniform vec3 colorA; 
+      uniform vec3 colorB; 
+      varying vec3 vUv;
+
+      void main() {
+        gl_FragColor = vec4(mix(colorA, colorB, vUv.z), 1.0);
+      }
+    `;
   }
 }

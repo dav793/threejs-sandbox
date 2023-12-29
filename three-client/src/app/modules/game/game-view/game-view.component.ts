@@ -42,10 +42,10 @@ export class GameViewComponent {
       this.memoryLimitMeter.nativeElement.innerHTML = `Memory limit: ${memoryLimit.toFixed(1)} MB`;
     });
 
-    this.animate();
+    this.startRenderLoop();
   }
 
-  public animate(): void {
+  public startRenderLoop(): void {
     // We have to run this outside angular zones,
     // because it could trigger heavy changeDetection cycles.
     this.ngZone.runOutsideAngular(() => {
