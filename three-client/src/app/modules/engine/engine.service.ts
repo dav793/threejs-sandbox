@@ -9,6 +9,10 @@ import { EffectComposer } from 'postprocessing';
 @Injectable()
 export class EngineService {
 
+  fps$: Subject<number> = new Subject<number>();
+  memoryHeapUsed$: Subject<number> = new Subject<number>();
+  memoryHeapLimit$: Subject<number> = new Subject<number>();
+
   private renderer: THREE.WebGLRenderer;
   private composer: EffectComposer;
   private camera: THREE.PerspectiveCamera;
@@ -21,9 +25,15 @@ export class EngineService {
 
   private frameId: number | null = null;
 
-  private fps$: Subject<number> = new Subject<number>();
+  private beginTime: any;
+  private prevTime: any;
+  private frames: number;
 
   constructor() { }
+
+  initMetricsPanel() {
+
+  }
 
   destroyCanvas(canvas: ElementRef<HTMLCanvasElement>): void {
     if (this.frameId != null) {
@@ -48,7 +58,10 @@ export class EngineService {
     this.renderer.setSize(width, height);
     this.renderer.shadowMap.enabled = true;
 
-    
+    // initialize performance metrics
+    this.beginTime = ( performance || Date ).now();
+    this.prevTime = this.beginTime
+    this.frames = 0;
 
     // create the scene
     this.scene = new THREE.Scene();
@@ -106,9 +119,27 @@ export class EngineService {
       this.render();
     });
 
+    // animate cube
     this.cube.rotation.x += 0.01;
     this.cube.rotation.y += 0.01;
     this.renderer.render(this.scene, this.camera);
+
+    // update performance metrics
+    this.frames++;
+    var time = ( performance || Date ).now();
+    if ( time >= this.prevTime + 1000 ) {
+      const fps = ( this.frames * 1000 ) / ( time - this.prevTime );
+      this.fps$.next(fps);
+
+      const memoryHeapUsed = (performance as any).memory.usedJSHeapSize / 1048576;
+      this.memoryHeapUsed$.next(memoryHeapUsed);
+
+      const memoryHeapLimit = (performance as any).memory.jsHeapSizeLimit / 1048576;
+      this.memoryHeapLimit$.next(memoryHeapLimit);    
+
+      this.prevTime = time;
+      this.frames = 0;
+    }
   }
 
   public resize(width: number, height: number): void {

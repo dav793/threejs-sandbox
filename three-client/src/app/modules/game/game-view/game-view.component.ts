@@ -1,4 +1,5 @@
 import { Component, NgZone, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
+import { Subject, combineLatest, takeUntil } from 'rxjs';
 
 import { EngineService } from 'src/app/modules/engine/engine.service';
 
@@ -10,8 +11,11 @@ import { EngineService } from 'src/app/modules/engine/engine.service';
 export class GameViewComponent {
 
   @ViewChild('canvas', { static: true }) private canvas: ElementRef<HTMLCanvasElement>;
+  @ViewChild('fpsMeter', { static: true }) private fpsMeter: ElementRef<HTMLElement>;
+  @ViewChild('memoryMeter', { static: true }) private memoryMeter: ElementRef<HTMLElement>;
+  @ViewChild('memoryLimitMeter', { static: true }) private memoryLimitMeter: ElementRef<HTMLElement>;
 
-  public fps: number;
+  private destroy$: Subject<void> = new Subject<void>();
 
   constructor(
     private engineService: EngineService,
@@ -20,10 +24,24 @@ export class GameViewComponent {
 
   public ngOnDestroy(): void {
     this.engineService.destroyCanvas(this.canvas);
+    this.destroy$.next();
   }
 
   ngAfterViewInit(): void {
     this.engineService.createCanvas(this.canvas, window.innerWidth, window.innerHeight, window.devicePixelRatio);
+
+    combineLatest([
+      this.engineService.fps$,
+      this.engineService.memoryHeapUsed$,
+      this.engineService.memoryHeapLimit$
+    ]).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(([fps, memoryUsed, memoryLimit]) => {
+      this.fpsMeter.nativeElement.innerHTML = `FPS: ${Math.floor(fps)}`;
+      this.memoryMeter.nativeElement.innerHTML = `Memory used: ${memoryUsed.toFixed(1)} MB`;
+      this.memoryLimitMeter.nativeElement.innerHTML = `Memory limit: ${memoryLimit.toFixed(1)} MB`;
+    });
+
     this.animate();
   }
 
